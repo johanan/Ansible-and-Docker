@@ -1,0 +1,36 @@
+---
+  - name: Install ufw
+    apt: name=ufw state=present
+
+  - name: create a new user
+    user: name=jjohanan
+          state=present
+          shell=/bin/bash
+
+  - authorized_key: user=jjohanan
+                    key="{{ lookup('file', '/Users/jjohanan/.ssh/id_rsa.pub') }}"
+
+  - name: Make sure we can sudo
+    copy: src=jjohanan_sudoer dest=/etc/sudoers.d/jjohanan_sudoer mode=0440
+
+  - name: Configure ufw
+    ufw: rule=limit port=22 proto=tcp
+
+  - name: Default deny
+    ufw: state=enabled direction=incoming policy=deny
+
+  - name: Disable root SSH
+    lineinfile: state=present
+                dest=/etc/ssh/sshd_config
+                regexp="PermitRootLogin yes"
+                line="PermitRootLogin no"
+                backrefs=yes
+
+  - name: Disable password SSH
+    lineinfile: state=present
+                dest=/etc/ssh/sshd_config
+                regexp="PasswordAuthentication yes"
+                line="PasswordAuthentication no"
+                backrefs=yes
+    notify:
+      - restart ssh
