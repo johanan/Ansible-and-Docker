@@ -1,0 +1,8 @@
+- hosts: all
+  remote_user: jjohanan
+  sudo: yes
+  vars_files:
+    - vars.yml
+  roles:
+    - docker
+    - nginx
