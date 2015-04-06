@@ -1,0 +1,24 @@
+---
+  - name: Create Docker base directory
+    file: path=/var/lib/blog state=directory
+
+  - name: Copy docker-compose file
+    template: src=docker-compose.j2 dest=/var/lib/blog/docker-compose.yml
+
+  - name: Copy MySQL Dockerfile
+    copy: src=mysql dest=/var/lib/blog/
+
+  - name: Make sure load_db.sh is executable
+    file: path=/var/lib/blog/mysql/load_db.sh mode=755
+
+  - name: load nginx
+    copy: src=nginx dest=/var/lib/blog/
+
+  #- name: Make sure all builds are new
+  #  command: chdir=/var/lib/blog docker-compose build
+
+  - name: start up with docker-compose
+    command: chdir=/var/lib/blog docker-compose up -d
+
+  - name: Load blog backup database
+    command: docker exec blog_mysql_1 /load_db.sh

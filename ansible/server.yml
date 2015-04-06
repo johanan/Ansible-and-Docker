@@ -5,4 +5,4 @@
     - vars.yml
   roles:
     - docker
-    - nginx
+    - blog_site

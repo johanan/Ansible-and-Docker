@@ -15,3 +15,6 @@
 
   - name: install docker-py
     pip: name=docker-py state=present
+
+  - name: install docker-compose
+    pip: name=docker-compose state=present

@@ -1,0 +1,16 @@
+mysql:
+  build: ./mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD={{ lookup('env', 'MYSQL_ROOT_PASSWORD') }}
+    - MYSQL_USER={{ lookup('env', 'MYSQL_USER') }}
+    - MYSQL_PASSWORD={{ lookup('env', 'MYSQL_PASSWORD') }}
+    - MYSQL_DATABASE={{ lookup('env', 'MYSQL_DATABASE') }}
+web:
+  build: ./nginx
+  volumes:
+    - ./nginx:/var/www/html
+    - ./nginx:/etc/nginx/sites-available
+  ports:
+    - "8000:80"
+  links:
+    - mysql:db
