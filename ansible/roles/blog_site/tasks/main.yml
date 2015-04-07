@@ -14,11 +14,29 @@
   - name: load nginx
     copy: src=nginx dest=/var/lib/blog/
 
-  #- name: Make sure all builds are new
-  #  command: chdir=/var/lib/blog docker-compose build
+  - name: create www directory
+    file: path=/var/www/html state=directory
+
+  - name: copy ejosh over
+    synchronize: src=ejosh dest=/var/www/html
+
+  - name: copy varnish over
+    copy: src=varnish dest=/var/lib/blog/
+
+  - name: make sure varnish is executable
+    file: path=/var/lib/blog/varnish/start-varnish.sh mode=755
+
+  - name: Make sure all builds are new
+    command: chdir=/var/lib/blog docker-compose build
 
   - name: start up with docker-compose
     command: chdir=/var/lib/blog docker-compose up -d
 
   - name: Load blog backup database
     command: docker exec blog_mysql_1 /load_db.sh
+
+  - name: Setup ufw
+    ufw: rule=allow port=8000 proto=tcp
+
+  - name: Setup ufw
+    ufw: rule=allow port=80 proto=tcp

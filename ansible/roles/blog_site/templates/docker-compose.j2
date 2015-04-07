@@ -8,9 +8,17 @@ mysql:
 web:
   build: ./nginx
   volumes:
-    - ./nginx:/var/www/html
+    - /var/www/html/:/var/www/html/
     - ./nginx:/etc/nginx/sites-available
   ports:
     - "8000:80"
   links:
     - mysql:db
+varnish:
+  build: ./varnish
+  environment:
+    CACHE_SIZE: 64m
+  ports:
+    - "80:80"
+  links:
+    - web:backend

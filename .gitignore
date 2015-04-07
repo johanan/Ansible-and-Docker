@@ -2,3 +2,4 @@ venv/
 .env
 .DS_Store
 wp_backup.sql
+ejosh/
