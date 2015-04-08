@@ -7,13 +7,12 @@ server {
 
         #server_name localhost;
 
-	location @de {
-		rewrite ^/de(.*) /de/index.php?q=$1;
-	}
+      	location @de {
+      		rewrite ^/de(.*) /de/index.php?q=$1;
+      	}
 
         location /de/ {
-		root /var/www/html/ejosh/de;
-		try_files $uri $uri/ @de;
+		      try_files $uri $uri/ @de;
         }
 
         error_page 404 /404.html;

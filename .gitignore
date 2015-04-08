@@ -3,3 +3,4 @@ venv/
 .DS_Store
 wp_backup.sql
 ejosh/
+*.key

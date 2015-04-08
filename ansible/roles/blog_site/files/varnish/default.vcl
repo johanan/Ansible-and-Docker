@@ -145,7 +145,7 @@ sub vcl_hash {
     	if (req.http.Accept-Encoding) {
         	hash_data(req.http.Accept-Encoding);
 	}
-	
+
 	if (req.http.X-Forwarded-Proto ~ "https") {
 		hash_data(req.http.X-Forwarded-Proto);
 	}
@@ -162,6 +162,7 @@ sub vcl_backend_response {
 	# For static content strip all backend cookies
 	if (bereq.url ~ "\.(css|js|png|gif|jp(e?)g)|swf|ico") {
 		unset beresp.http.cookie;
+    set beresp.http.cache-control = "max-age=31536000";
 	}
 	# Don't store backend
 	if (bereq.url ~ "wp-(login|admin)" || bereq.url ~ "preview=true") {

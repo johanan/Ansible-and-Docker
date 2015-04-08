@@ -18,7 +18,12 @@ varnish:
   build: ./varnish
   environment:
     CACHE_SIZE: 64m
-  ports:
-    - "80:80"
   links:
     - web:backend
+frontnginx:
+  build: ./frontnginx
+  ports:
+    - "443:443"
+    - "80:80"
+  links:
+    - varnish:varnish

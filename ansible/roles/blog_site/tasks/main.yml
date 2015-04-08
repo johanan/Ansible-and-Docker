@@ -26,17 +26,27 @@
   - name: make sure varnish is executable
     file: path=/var/lib/blog/varnish/start-varnish.sh mode=755
 
+  - name: Copy front nginx over
+    copy: src=frontnginx dest=/var/lib/blog/
+
+  - name: make sure start-nginx is executable
+    file: path=/var/lib/blog/frontnginx/start-nginx.sh mode=755
+
   - name: Make sure all builds are new
     command: chdir=/var/lib/blog docker-compose build
 
   - name: start up with docker-compose
     command: chdir=/var/lib/blog docker-compose up -d
+    #command: chdir=/var/lib/blog docker-compose up -d --no-recreate
 
   - name: Load blog backup database
     command: docker exec blog_mysql_1 /load_db.sh
 
   - name: Setup ufw
-    ufw: rule=allow port=8000 proto=tcp
+    ufw: rule=deny port=8000 proto=tcp
 
   - name: Setup ufw
     ufw: rule=allow port=80 proto=tcp
+
+  - name: Open up SSL ufw
+    ufw: rule=allow port=443 proto=tcp
