@@ -4,3 +4,4 @@ venv/
 wp_backup.sql
 ejosh/
 *.key
+zendfb/

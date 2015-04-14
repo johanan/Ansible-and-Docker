@@ -5,21 +5,25 @@ mysql:
     - MYSQL_USER={{ lookup('env', 'MYSQL_USER') }}
     - MYSQL_PASSWORD={{ lookup('env', 'MYSQL_PASSWORD') }}
     - MYSQL_DATABASE={{ lookup('env', 'MYSQL_DATABASE') }}
+  restart: always
 web:
   build: ./nginx
   volumes:
     - /var/www/html/:/var/www/html/
+    - /var/www-src/:/var/www-src/
     - ./nginx:/etc/nginx/sites-available
   ports:
     - "8000:80"
   links:
     - mysql:db
+  restart: always
 varnish:
   build: ./varnish
   environment:
     CACHE_SIZE: 64m
   links:
     - web:backend
+  restart: always
 frontnginx:
   build: ./frontnginx
   ports:
@@ -27,3 +31,4 @@ frontnginx:
     - "80:80"
   links:
     - varnish:varnish
+  restart: always

@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo chown -R root:www-data /var/www/html/ejosh/

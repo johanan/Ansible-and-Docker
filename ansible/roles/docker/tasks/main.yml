@@ -7,11 +7,11 @@
     apt: name=lxc-docker update-cache=yes
     when: docker.changed
 
-  - name: install pip
-    apt: name=python-pip state=present update-cache=yes
+  - name: get setuptools
+    apt: name=python-setuptools state=present
 
   - name: make sure pip works
-    shell: easy_install -U pip
+    shell: easy_install -U pip creates=/usr/local/bin/pip
 
   - name: install docker-py
     pip: name=docker-py state=present

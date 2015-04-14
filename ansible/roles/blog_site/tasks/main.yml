@@ -1,15 +1,38 @@
 ---
+  - name: register swap var
+    stat: path=/mnt/swap
+    register: swap_file
+
+  - name: create the file to be used for swap
+    command: fallocate -l 512M /mnt/swap
+    when: swap_file.stat.exists == False
+
+  - name: format the file for swap
+    command: mkswap /mnt/swap
+    when: swap_file.stat.exists == False
+
+  - name: change swap file permissions
+    file: path=/mnt/swap owner=root group=root mode=0600
+    when: swap_file.stat.exists == False
+
+  - name: add the file to the system as a swap file
+    command: swapon /mnt/swap
+    when: swap_file.stat.exists == False
+
   - name: Create Docker base directory
     file: path=/var/lib/blog state=directory
 
   - name: Copy docker-compose file
     template: src=docker-compose.j2 dest=/var/lib/blog/docker-compose.yml
 
-  - name: Copy MySQL Dockerfile
+  - name: Load MySQL
     copy: src=mysql dest=/var/lib/blog/
 
   - name: Make sure load_db.sh is executable
     file: path=/var/lib/blog/mysql/load_db.sh mode=755
+
+  - name: Make sure backup.sh is executable
+    file: path=/var/lib/blog/mysql/backup.sh mode=755
 
   - name: load nginx
     copy: src=nginx dest=/var/lib/blog/
@@ -19,6 +42,12 @@
 
   - name: copy ejosh over
     synchronize: src=ejosh dest=/var/www/html
+
+  - name: make sure /var/www-src exists
+    file: path=/var/www-src state=directory
+
+  - name: copy zendfb over
+    copy: src=zendfb dest=/var/www-src/
 
   - name: copy varnish over
     copy: src=varnish dest=/var/lib/blog/
@@ -43,10 +72,28 @@
     command: docker exec blog_mysql_1 /load_db.sh
 
   - name: Setup ufw
-    ufw: rule=deny port=8000 proto=tcp
-
-  - name: Setup ufw
     ufw: rule=allow port=80 proto=tcp
 
   - name: Open up SSL ufw
     ufw: rule=allow port=443 proto=tcp
+
+  - name: create the logrotate conf for docker
+    copy: src=logrotate_docker dest=/etc/logrotate.d/docker
+
+  - name: copy the backup script
+    copy: src=site-backup dest=/var/lib/blog/site-backup mode=755
+
+  - name: install s3cmd
+    apt: name=s3cmd state=present update_cache=yes
+
+  - name: install s3cfg
+    template: src=s3cfg dest=/root/.s3cfg
+
+  - name: schedule backup to run weekly
+    cron: name="site backup" minute="0" hour="2" weekday="1" job="/var/lib/blog/site-backup" user="root"
+
+  - name: Copy over site-upgrade
+    copy: src=site-upgrade dest=/var/lib/blog/ mode=755
+
+  - name: Copy over site-normal
+    copy: src=site-normal dest=/var/lib/blog/ mode=755 

@@ -17,4 +17,4 @@ ENV CACHE_SIZE=32m
 
 EXPOSE 80
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/start-varnish.sh"]
