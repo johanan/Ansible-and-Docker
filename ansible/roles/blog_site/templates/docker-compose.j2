@@ -5,7 +5,7 @@ mysql:
     - MYSQL_USER={{ lookup('env', 'MYSQL_USER') }}
     - MYSQL_PASSWORD={{ lookup('env', 'MYSQL_PASSWORD') }}
     - MYSQL_DATABASE={{ lookup('env', 'MYSQL_DATABASE') }}
-  restart: always
+  mem_limit: 128m
 web:
   build: ./nginx
   volumes:
@@ -24,6 +24,20 @@ varnish:
   links:
     - web:backend
   restart: always
+cadvisor:
+  image: google/cadvisor:latest
+  volumes:
+   - /:/rootfs:ro
+   - /sys:/sys:ro
+   - /var/run:/var/run:rw
+   - /var/lib/docker/:/var/lib/docker:ro
+   - /cgroup/cpu:/cgroup/cpu:ro
+   - /cgroup/cpuacct:/cgroup/cpuacct:ro
+   - /cgroup/cpuset:/cgroup/cpuset:ro
+   - /cgroup/memory:/cgroup/memory:ro
+   - /cgroup/blkio:/cgroup/blkio:ro
+  ports:
+    - "8080:8080"
 frontnginx:
   build: ./frontnginx
   ports:
@@ -31,4 +45,5 @@ frontnginx:
     - "80:80"
   links:
     - varnish:varnish
+    - cadvisor:cadvisor
   restart: always

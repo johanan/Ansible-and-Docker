@@ -13,7 +13,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/
 COPY start-varnish.sh /start-varnish.sh
 COPY default.vcl /etc/varnish/default.vcl
 
-ENV CACHE_SIZE=32m
+ENV CACHE_SIZE=128m
 
 EXPOSE 80
 

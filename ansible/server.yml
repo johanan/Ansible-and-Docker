@@ -4,5 +4,6 @@
   vars_files:
     - vars.yml
   roles:
+    - swap
     - docker
     - blog_site

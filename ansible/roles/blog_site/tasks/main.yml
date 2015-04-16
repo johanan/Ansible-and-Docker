@@ -1,24 +1,4 @@
 ---
-  - name: register swap var
-    stat: path=/mnt/swap
-    register: swap_file
-
-  - name: create the file to be used for swap
-    command: fallocate -l 512M /mnt/swap
-    when: swap_file.stat.exists == False
-
-  - name: format the file for swap
-    command: mkswap /mnt/swap
-    when: swap_file.stat.exists == False
-
-  - name: change swap file permissions
-    file: path=/mnt/swap owner=root group=root mode=0600
-    when: swap_file.stat.exists == False
-
-  - name: add the file to the system as a swap file
-    command: swapon /mnt/swap
-    when: swap_file.stat.exists == False
-
   - name: Create Docker base directory
     file: path=/var/lib/blog state=directory
 
@@ -40,8 +20,8 @@
   - name: create www directory
     file: path=/var/www/html state=directory
 
-  - name: copy ejosh over
-    synchronize: src=ejosh dest=/var/www/html
+  #- name: copy ejosh over
+  #  synchronize: src=ejosh dest=/var/www/html
 
   - name: make sure /var/www-src exists
     file: path=/var/www-src state=directory
@@ -61,12 +41,21 @@
   - name: make sure start-nginx is executable
     file: path=/var/lib/blog/frontnginx/start-nginx.sh mode=755
 
+  - name: Stop all containers
+    command: chdir=/var/lib/blog docker-compose stop
+
+  - name: Remove all current containers
+    command: chdir=/var/lib/blog docker-compose rm --force
+
   - name: Make sure all builds are new
     command: chdir=/var/lib/blog docker-compose build
 
   - name: start up with docker-compose
     command: chdir=/var/lib/blog docker-compose up -d
     #command: chdir=/var/lib/blog docker-compose up -d --no-recreate
+
+  - name: make sure mysql comes up
+    pause: seconds=15
 
   - name: Load blog backup database
     command: docker exec blog_mysql_1 /load_db.sh
@@ -96,4 +85,4 @@
     copy: src=site-upgrade dest=/var/lib/blog/ mode=755
 
   - name: Copy over site-normal
-    copy: src=site-normal dest=/var/lib/blog/ mode=755 
+    copy: src=site-normal dest=/var/lib/blog/ mode=755
