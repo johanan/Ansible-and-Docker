@@ -1,6 +1,0 @@
----
-  - name: Setup ufw
-    ufw: rule=allow port=80 proto=tcp
-
-  - name: Create nginx container
-    docker: image=nginx name=my-nginx ports=80:80 state=running

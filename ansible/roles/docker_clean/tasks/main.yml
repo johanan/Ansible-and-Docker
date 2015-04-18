@@ -1,0 +1,3 @@
+---
+  - name: Clean all unused images
+    command: docker rmi $(docker images -q -f "dangling=true")

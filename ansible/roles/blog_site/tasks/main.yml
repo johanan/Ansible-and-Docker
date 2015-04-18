@@ -51,8 +51,7 @@
     command: chdir=/var/lib/blog docker-compose build
 
   - name: start up with docker-compose
-    command: chdir=/var/lib/blog docker-compose up -d
-    #command: chdir=/var/lib/blog docker-compose up -d --no-recreate
+    command: chdir=/var/lib/blog docker-compose up -d --no-recreate
 
   - name: make sure mysql comes up
     pause: seconds=15
