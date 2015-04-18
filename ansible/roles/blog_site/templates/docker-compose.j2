@@ -16,14 +16,12 @@ web:
     - "8000:80"
   links:
     - mysql:db
-  restart: always
 varnish:
   build: ./varnish
   environment:
     CACHE_SIZE: 64m
   links:
     - web:backend
-  restart: always
 cadvisor:
   image: google/cadvisor:latest
   volumes:
@@ -46,4 +44,3 @@ frontnginx:
   links:
     - varnish:varnish
     - cadvisor:cadvisor
-  restart: always

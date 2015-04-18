@@ -1,15 +1,9 @@
 ---
-  - name: Load service
-    copy: src={{ service }} dest={{ work_dir }}
-
-  - name: Stop service
+  - name: Stop {{ service }}
     command: chdir={{ work_dir }} docker-compose stop {{ service }}
 
-  - name: Remove container
+  - name: Remove {{ service }}
     command: chdir={{ work_dir }} docker-compose rm --force {{ service }}
 
-  - name: Build container
+  - name: Build {{ service }}
     command: chdir={{ work_dir }} docker-compose build {{ service }}
-
-  - name: Bring up container
-    command: chdir={{ work_dir }} docker-compose up -d --no-recreate

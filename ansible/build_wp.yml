@@ -1,0 +1,31 @@
+- hosts: all
+  remote_user: jjohanan
+  sudo: yes
+  vars_files:
+    - vars.yml
+  roles:
+    - swap
+    - docker
+    - blog_site
+    - { role: service_build, service: mysql }
+    - { role: service_build, service: nginx }
+    - { role: service_build, service: varnish }
+    - { role: service_build, service: frontnginx }
+    - { role: service_build, service: ejosh, work_dir: /var/www/html }
+    - { role: service_build, service: zendfb, work_dir: /var/www-src }
+    - { role: compose_rebuild, service: mysql }
+    - { role: compose_rebuild, service: web }
+    - { role: compose_rebuild, service: varnish }
+    - { role: compose_rebuild, service: cadvisor }
+    - { role: compose_rebuild, service: frontnginx }
+
+  tasks:
+    - name: bring it all up
+      command: chdir={{ work_dir }} docker-compose up -d --no-recreate
+
+  post_tasks:
+    - name: make sure mysql comes up
+      pause: seconds=15
+
+    - name: Load blog backup database
+      command: docker exec blog_mysql_1 /load_db.sh

@@ -1,63 +1,9 @@
 ---
   - name: Create Docker base directory
-    file: path=/var/lib/blog state=directory
+    file: path={{ work_dir }} state=directory
 
   - name: Copy docker-compose file
-    template: src=docker-compose.j2 dest=/var/lib/blog/docker-compose.yml
-
-  - name: Load MySQL
-    copy: src=mysql dest=/var/lib/blog/
-
-  - name: Make sure load_db.sh is executable
-    file: path=/var/lib/blog/mysql/load_db.sh mode=755
-
-  - name: Make sure backup.sh is executable
-    file: path=/var/lib/blog/mysql/backup.sh mode=755
-
-  - name: load nginx
-    copy: src=nginx dest=/var/lib/blog/
-
-  - name: create www directory
-    file: path=/var/www/html state=directory
-
-  #- name: copy ejosh over
-  #  synchronize: src=ejosh dest=/var/www/html
-
-  - name: make sure /var/www-src exists
-    file: path=/var/www-src state=directory
-
-  - name: copy zendfb over
-    copy: src=zendfb dest=/var/www-src/
-
-  - name: copy varnish over
-    copy: src=varnish dest=/var/lib/blog/
-
-  - name: make sure varnish is executable
-    file: path=/var/lib/blog/varnish/start-varnish.sh mode=755
-
-  - name: Copy front nginx over
-    copy: src=frontnginx dest=/var/lib/blog/
-
-  - name: make sure start-nginx is executable
-    file: path=/var/lib/blog/frontnginx/start-nginx.sh mode=755
-
-  - name: Stop all containers
-    command: chdir=/var/lib/blog docker-compose stop
-
-  - name: Remove all current containers
-    command: chdir=/var/lib/blog docker-compose rm --force
-
-  - name: Make sure all builds are new
-    command: chdir=/var/lib/blog docker-compose build
-
-  - name: start up with docker-compose
-    command: chdir=/var/lib/blog docker-compose up -d --no-recreate
-
-  - name: make sure mysql comes up
-    pause: seconds=15
-
-  - name: Load blog backup database
-    command: docker exec blog_mysql_1 /load_db.sh
+    template: src=docker-compose.j2 dest={{ work_dir }}/docker-compose.yml
 
   - name: Setup ufw
     ufw: rule=allow port=80 proto=tcp
@@ -69,7 +15,7 @@
     copy: src=logrotate_docker dest=/etc/logrotate.d/docker
 
   - name: copy the backup script
-    copy: src=site-backup dest=/var/lib/blog/site-backup mode=755
+    copy: src=site-backup dest={{ work_dir }}/site-backup mode=755
 
   - name: install s3cmd
     apt: name=s3cmd state=present update_cache=yes
@@ -78,10 +24,10 @@
     template: src=s3cfg dest=/root/.s3cfg
 
   - name: schedule backup to run weekly
-    cron: name="site backup" minute="0" hour="2" weekday="1" job="/var/lib/blog/site-backup" user="root"
+    cron: name="site backup" minute="0" hour="2" weekday="1" job="{{ work_dir }}/site-backup" user="root"
 
   - name: Copy over site-upgrade
-    copy: src=site-upgrade dest=/var/lib/blog/ mode=755
+    copy: src=site-upgrade dest={{ work_dir }}/ mode=755
 
   - name: Copy over site-normal
-    copy: src=site-normal dest=/var/lib/blog/ mode=755
+    copy: src=site-normal dest={{ work_dir }}/ mode=755

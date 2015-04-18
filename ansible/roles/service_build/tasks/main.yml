@@ -1,0 +1,6 @@
+---
+  - name: Create {{ work_dir }}
+    file: path={{ work_dir }} state=directory
+
+  - name: Load {{ service }}
+    synchronize: src={{ service }} dest={{ work_dir }} group=no owner=no
