@@ -5,3 +5,4 @@ wp_backup.sql
 ejosh/
 *.key
 zendfb/
+.vagrant/

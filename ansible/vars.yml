@@ -1,2 +1,3 @@
 newuser: jjohanan
 work_dir: /var/lib/blog
+ssh_key: /Users/jjohanan/.ssh/id_rsa.pub
