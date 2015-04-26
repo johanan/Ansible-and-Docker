@@ -7,20 +7,22 @@
     - swap
     - docker
     - blog_site
-    - { role: service_build, service: mysql }
-    - { role: service_build, service: nginx }
-    - { role: service_build, service: varnish }
-    - { role: service_build, service: frontnginx }
-    - { role: service_build, service: ejosh, work_dir: /var/www/html }
-    - { role: service_build, service: zendfb, work_dir: /var/www-src }
+    - { role: service_build, service: mysql, tags: ['full'] }
+    - { role: service_build, service: backend, tags: ['full'] }
+    - { role: service_build, service: php, tags: ['full'] }
+    - { role: service_build, service: varnish, tags: ['full', 'web'] }
+    - { role: service_build, service: frontnginx, tags: ['full', 'web'] }
+    - { role: service_build, service: ejosh, work_dir: /var/www/html, tags: ['full']}
 
   tasks:
-    - include: tasks/docker-compose_rebuild.yml service=frontnginx
+    - { include: tasks/docker-compose_rebuild.yml, service: frontnginx, tags: ['full', 'web'] }
     - include: tasks/docker-compose_rebuild.yml service=cadvisor
     - include: tasks/docker-compose_rebuild.yml service=varnish
-    - include: tasks/docker-compose_rebuild.yml service=web
+    - include: tasks/docker-compose_rebuild.yml service=backend
+    - include: tasks/docker-compose_rebuild.yml service=php
+    #- include: tasks/docker-compose_rebuild.yml service=data
     - include: tasks/docker-compose_rebuild.yml service=mysql
-    
+
     - name: bring it all up
       command: chdir={{ work_dir }} docker-compose up -d --no-recreate
     - name: make sure mysql comes up

@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo chown -R www-data:www-data /var/www/html/ejosh/
+sudo docker exec blog_backend_1 /site-upgrade
