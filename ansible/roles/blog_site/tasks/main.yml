@@ -16,15 +16,23 @@
 
   - name: copy the backup script
     copy: src=site-backup dest={{ work_dir }}/site-backup mode=755
+    tags:
+      - prod
 
   - name: install s3cmd
     apt: name=s3cmd state=present update_cache=yes
+    tags:
+      - prod
 
   - name: install s3cfg
     template: src=s3cfg dest=/root/.s3cfg
+    tags:
+      - prod
 
   - name: schedule backup to run weekly
     cron: name="site backup" minute="0" hour="2" weekday="1" job="{{ work_dir }}/site-backup" user="root"
+    tags:
+      - prod
 
   - name: Copy over site-upgrade
     copy: src=site-upgrade dest={{ work_dir }}/ mode=755
