@@ -39,7 +39,9 @@ cadvisor:
   image: google/cadvisor:latest
   volumes:
    - /:/rootfs:ro
-   - /sys:/sys:ro
+   #issue with 1.6.1+ and cadvisor
+   #https://github.com/docker/docker/issues/13097
+   #- /sys:/sys:ro
    - /var/run:/var/run:rw
    - /var/lib/docker/:/var/lib/docker:ro
    - /cgroup/cpu:/cgroup/cpu:ro
