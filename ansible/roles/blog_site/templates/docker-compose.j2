@@ -32,6 +32,8 @@ varnish:
   build: ./varnish
   environment:
     CACHE_SIZE: 64m
+  ports:
+    - "8001:80"
   links:
     - backend:backend
 
@@ -39,9 +41,7 @@ cadvisor:
   image: google/cadvisor:latest
   volumes:
    - /:/rootfs:ro
-   #issue with 1.6.1+ and cadvisor
-   #https://github.com/docker/docker/issues/13097
-   #- /sys:/sys:ro
+   - /sys:/sys:ro
    - /var/run:/var/run:rw
    - /var/lib/docker/:/var/lib/docker:ro
    - /cgroup/cpu:/cgroup/cpu:ro
