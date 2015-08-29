@@ -6,13 +6,12 @@
   roles:
     - { role: swap, tags: [] }
     - { role: docker, tags: [] }
-    - { role: blog_site, tags: [] }
     - { role: service_build, service: mysql, tags: [], exec_files: ['backup.sh', 'load_db.sh'] }
     - { role: service_build, service: php, tags: [], exec_files: [] }
     - { role: service_build, service: backend, tags: ['backend'], exec_files: ['site-normal', 'site-upgrade', 'site-upgrade', 'start-nginx.sh'] }
     - { role: service_build, service: varnish, tags: ['backend'], exec_files: ['start-varnish.sh'] }
     - { role: service_build, service: frontnginx, tags: ['web'], exec_files: ['start-nginx.sh'] }
-    - { role: service_build, service: ejosh, work_dir: /var/www/html, tags: [], exec_files: [] }
+    - { role: blog_site, tags: [] }
 
   tasks:
     - { include: tasks/docker-compose_rebuild.yml, service: frontnginx, tags: ['web'] }

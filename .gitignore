@@ -6,3 +6,5 @@ ejosh/
 *.key
 zendfb/
 .vagrant/
+ejosh_site.bak.tar
+wp_backup.sql.tar

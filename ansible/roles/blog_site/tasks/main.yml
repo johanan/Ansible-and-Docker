@@ -39,3 +39,9 @@
 
   - name: Copy over site-normal
     copy: src=site-normal dest={{ work_dir }}/ mode=755
+
+  - name: Untar site backup
+    unarchive: src=ejosh_site.bak.tar dest=/
+
+  - name: Move MySQL backup over
+    unarchive: src=wp_backup.sql.tar dest={{ work_dir }}/mysql

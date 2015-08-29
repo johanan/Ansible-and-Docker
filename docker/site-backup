@@ -1,7 +1,7 @@
 #!/bin/bash
 WEEK=$((($(date +%e)-1)/7+1))
-docker exec -t blog_mysql_1 /backup.sh | gzip -9 > /tmp/wp_backup$WEEK.sql.gz
-docker run --rm --volumes-from blog_php_1 -v /tmp:/backup busybox tar cf /backup/ejosh_site.bak.tar /var/www/html/ejosh/
+docker exec -t blog_mysql_1 /backup.sh > /tmp/wp_backup.sql && tar -zcvf /tmp/wp_backup$WEEK.sql.tar.gz /tmp/wp_backup.sql
+docker run --rm --volumes-from blog_php_1 -v /tmp:/backup debian:jessie tar -zcvf /backup/ejosh_site.bak.tar.gz /var/www/html/ejosh/
 
-s3cmd put /tmp/wp_backup$WEEK.sql.gz s3://ejoshblog-backup/weekly/wp_backup$WEEK.sql.gz && rm /tmp/wp_backup$WEEK.sql.gz
-s3cmd put /tmp/ejosh_site.bak.tar s3://ejoshblog-backup/weekly/ejosh_site$WEEK.bak.tar && rm /tmp/ejosh_site.bak.tar
+s3cmd put /tmp/wp_backup$WEEK.sql.tar.gz s3://ejoshblog-backup/weekly/wp_backup$WEEK.sql.tar.gz && rm /tmp/wp_backup$WEEK.sql.tar.gz
+s3cmd put /tmp/ejosh_site.bak.tar.gz s3://ejoshblog-backup/weekly/ejosh_site$WEEK.bak.tar.gz && rm /tmp/ejosh_site.bak.tar.gz
