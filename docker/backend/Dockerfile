@@ -1,4 +1,4 @@
-FROM nginx:1.9
+FROM nginx:1.11
 
 COPY default.templ /etc/nginx/conf.d/default.templ
 COPY start-nginx.sh /start-nginx.sh

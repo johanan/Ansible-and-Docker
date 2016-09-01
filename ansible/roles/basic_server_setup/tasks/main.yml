@@ -1,4 +1,13 @@
 ---
+  - name: 'install python2'
+    raw: sudo apt-get -y install python-simplejson
+
+  - name: Gathering facts
+    setup:
+
+  - name: Set hostname
+    lineinfile: dest=/etc/hosts line="127.0.0.1 {{ansible_hostname}}"
+
   - name: Install ufw
     apt: name=ufw state=present
 

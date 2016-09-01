@@ -4,6 +4,8 @@ venv/
 wp_backup.sql
 ejosh/
 *.key
+*.retry
+ejosh.co.crt
 zendfb/
 .vagrant/
 ejosh_site.bak.tar

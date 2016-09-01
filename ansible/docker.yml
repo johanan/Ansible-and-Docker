@@ -1,5 +1,5 @@
 - hosts: all
   remote_user: jjohanan
-  sudo: yes
+  become: yes
   roles:
     - docker

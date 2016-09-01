@@ -5,10 +5,10 @@ mysql:
     - MYSQL_USER={{ lookup('env', 'MYSQL_USER') }}
     - MYSQL_PASSWORD={{ lookup('env', 'MYSQL_PASSWORD') }}
     - MYSQL_DATABASE={{ lookup('env', 'MYSQL_DATABASE') }}
-  mem_limit: 128m
+  mem_limit: 256m
 
 data:
-  image: debian:wheezy
+  image: debian:jessie
   volumes:
     - /var/www/html/:/var/www/html/
 
@@ -31,7 +31,7 @@ backend:
 varnish:
   build: ./varnish
   environment:
-    CACHE_SIZE: 64m
+    CACHE_SIZE: 128m
   ports:
     - "8001:80"
   links:

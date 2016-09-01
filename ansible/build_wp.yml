@@ -1,6 +1,6 @@
 - hosts: all
   remote_user: jjohanan
-  sudo: yes
+  become: true
   vars_files:
     - vars.yml
   roles:
@@ -14,12 +14,12 @@
     - { role: blog_site, tags: [] }
 
   tasks:
-    - { include: tasks/docker-compose_rebuild.yml, service: frontnginx, tags: ['web'] }
-    - { include: tasks/docker-compose_rebuild.yml, service: cadvisor, tags: ['web'] }
-    - { include: tasks/docker-compose_rebuild.yml, service: varnish, tags: ['backend'] }
-    - { include: tasks/docker-compose_rebuild.yml, service: backend, tags: ['backend'] }
-    - { include: tasks/docker-compose_rebuild.yml, service: php, tags: [] }
-    - { include: tasks/docker-compose_rebuild.yml, service: mysql, tags: [] }
+    - { include: tasks/docker-compose_rebuild.yml, vars: {service: frontnginx}, tags: ['web'] }
+    - { include: tasks/docker-compose_rebuild.yml, vars: {service: cadvisor}, tags: ['web'] }
+    - { include: tasks/docker-compose_rebuild.yml, vars: {service: varnish}, tags: ['backend'] }
+    - { include: tasks/docker-compose_rebuild.yml, vars: {service: backend}, tags: ['backend'] }
+    - { include: tasks/docker-compose_rebuild.yml, vars: {service: php}, tags: [] }
+    - { include: tasks/docker-compose_rebuild.yml, vars: {service: mysql}, tags: [] }
 
     - name: bring it all up
       command: chdir={{ work_dir }} docker-compose up -d --no-recreate
@@ -29,4 +29,4 @@
       pause: seconds=15
     - name: Load blog backup database
       command: docker exec blog_mysql_1 /load_db.sh
-    - include: tasks/docker_clean.yml
+    #- include: tasks/docker_clean.yml
