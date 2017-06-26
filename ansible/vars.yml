@@ -1,3 +1,4 @@
 newuser: jjohanan
 work_dir: /var/lib/blog
+site_name: ejosh.co
 ssh_key: /Users/jjohanan/.ssh/id_rsa.pub

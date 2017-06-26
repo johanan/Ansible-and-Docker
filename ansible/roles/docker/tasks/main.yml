@@ -1,15 +1,40 @@
 ---
-  - name: Add repo from Docker
-    shell: curl -sSL https://get.docker.com | sudo sh creates=/usr/bin/docker
+  - name: Get Docker GPG key
+    apt_key:
+      url: "https://download.docker.com/linux/ubuntu/gpg"
+      state: present
 
-  - name: get setuptools
-    apt: name=python-setuptools state=present
+  - name: Get kernel extras
+    action: shell apt-get install -y linux-image-extra-$(uname -r)
 
-  - name: make sure pip works
-    shell: easy_install -U pip creates=/usr/local/bin/pip
+  - name: Get more packages
+    apt: name={{item}} state=present
+    with_items:
+      - linux-image-extra-virtual
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python-setuptools
 
-  - name: install docker-py
-    pip: name=docker-py state=present
+  - name: Add Docker repo
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ hostvars[inventory_hostname].ansible_distribution_release}} stable
+      state: present
+      update_cache: yes
 
-  - name: install docker-compose
-    pip: name=docker-compose state=present
+  - name: Get Docker
+    apt: name={{item}} state=present
+    with_items:
+      - docker-ce
+      - docker-compose
+
+  - name: Get Pip
+    easy_install:
+      name: pip
+      state: latest
+
+  - name: Get docker-py
+    pip:
+      name: docker-py
+      state: latest

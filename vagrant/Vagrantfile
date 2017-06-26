@@ -75,7 +75,7 @@ Vagrant.configure(2) do |config|
   # SHELL
 
   config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "../ansible/digital_ocean.yml"
+    ansible.playbook = "../ansible/server.yml"
     #ansible.sudo = true
     ansible.extra_vars = { ansible_ssh_user: 'ubuntu' }
     ansible.host_key_checking = false

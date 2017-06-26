@@ -1,0 +1,8 @@
+FROM php:7-fpm
+
+RUN docker-php-ext-install mysqli opcache
+RUN echo "php_flag[display_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
+echo "php_admin_value[error_log] = /proc/self/fd/2" >> /usr/local/etc/php-fpm.d/www.conf && \
+echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
+echo "php_admin_flag[error_reporting] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
+echo "catch_workers_output = yes" >> /usr/local/etc/php-fpm.d/www.conf

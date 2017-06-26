@@ -2,8 +2,95 @@
   - name: Create Docker base directory
     file: path={{ work_dir }} state=directory
 
-  - name: Copy docker-compose file
-    template: src=docker-compose.j2 dest={{ work_dir }}/docker-compose.yml
+  - name: Untar site backup
+    unarchive: src=../site_data/ejosh_site.bak.tar.gz dest=/
+
+  - name: Move MySQL backup over
+    unarchive: src=../site_data/wp_backup.sql.tar.gz dest={{ work_dir }}
+
+  - name: Copy need files over
+    copy: src=../site_data/{{ item }} dest={{ work_dir }}
+    with_items:
+      - mysql_Dockerfile
+      - php_Dockerfile
+      - app_default.conf
+      - app_Dockerfile
+      - varnish_Dockerfile
+      - varnish_default.vcl
+      - frontend_default.conf
+      - frontend_Dockerfile
+      - frontend_nginx.conf
+      - ejosh.co.crt
+      - ejosh.co.key
+
+  - name: Check secrets
+    shell: docker secret ls
+    changed_when: False
+    register: docker_secret
+
+  - name: Create mysql root password
+    shell: openssl rand -base64 20 | docker secret create mysql_root_password -
+    when: "docker_secret.stdout.find('mysql_root_password') == -1"
+
+  - name: Create mysql user password
+    shell: openssl rand -base64 20 | docker secret create mysql_password -
+    when: "docker_secret.stdout.find('mysql_password') == -1"
+
+  - name: Create ejosh cert secret
+    shell: docker secret create ejosh.co.crt {{ work_dir }}/ejosh.co.crt
+    when: "docker_secret.stdout.find('ejosh.co.crt') == -1"
+
+  - name: Create ejosh cert key
+    shell: docker secret create ejosh.co.key {{ work_dir }}/ejosh.co.key
+    when: "docker_secret.stdout.find('ejosh.co.key') == -1"
+
+  - name: Delete the key
+    file:
+      path: "{{ work_dir }}/ejosh.co.key"
+      state: absent
+
+  - name: Build images
+    docker_image: path={{ work_dir }} name=ejosh.co/{{ item }} dockerfile={{ item }}_Dockerfile state=present force=True
+    with_items:
+      - mysql
+      - php
+      - app
+      - varnish
+      - frontend
+
+  - name: Register volume
+    shell: docker volume ls
+    changed_when: False
+    register: docker_volume
+
+  - name: Create volume
+    shell: docker volume create --opt type=none --opt device=/var/www/html --opt o=bind ejosh.co_data
+    when: "docker_volume.stdout.find('ejosh.co_data') == -1"
+
+  - name: Register services
+    shell: docker service ls
+    changed_when: False
+    register: docker_service
+
+  - name: Start MySQL
+    shell: docker service create --name mysql --replicas 1  --network ejosh_network  --secret source=mysql_root_password,target=mysql_root_password  --secret source=mysql_password,target=mysql_password  -e MYSQL_ROOT_PASSWORD_FILE="/run/secrets/mysql_root_password" -e MYSQL_PASSWORD_FILE="/run/secrets/mysql_password"  -e MYSQL_USER="wordpress" -e MYSQL_DATABASE="wordpress" ejosh.co/mysql
+    when: "docker_service.stdout.find('mysql') == -1"
+
+  - name: Start php
+    shell: docker service create --name php --network ejosh_network --secret source=mysql_password,target=mysql_password --mount type=volume,source=ejosh.co_data,destination=/var/www/html ejosh.co/php
+    when: "docker_service.stdout.find('php') == -1"
+
+  - name: Start app
+    shell: docker service create --name app --network ejosh_network --mount type=volume,source=ejosh.co_data,destination=/var/www/html --publish 8000:80 ejosh.co/app
+    when: "docker_service.stdout.find('app') == -1"
+
+  - name: Start varnish
+    shell: docker service create --name varnish --network ejosh_network --publish 8001:80 ejosh.co/varnish
+    when: "docker_service.stdout.find('varnish') == -1"
+
+  - name: Start frontend
+    shell: docker service create --name frontend --network ejosh_network --secret source=ejosh.co.crt,target=ejosh.co.crt --secret source=ejosh.co.key,target=ejosh.co.key --publish 80:80 --publish 443:443 ejosh.co/frontend
+    when: "docker_service.stdout.find('frontend') == -1"
 
   - name: Setup ufw
     ufw: rule=allow port=80 proto=tcp
@@ -12,36 +99,4 @@
     ufw: rule=allow port=443 proto=tcp
 
   - name: create the logrotate conf for docker
-    copy: src=logrotate_docker dest=/etc/logrotate.d/docker
-
-  - name: copy the backup script
-    copy: src=site-backup dest={{ work_dir }}/site-backup mode=755
-    tags:
-      - prod
-
-  - name: install s3cmd
-    apt: name=s3cmd state=present update_cache=yes
-    tags:
-      - prod
-
-  - name: install s3cfg
-    template: src=s3cfg dest=/root/.s3cfg
-    tags:
-      - prod
-
-  - name: schedule backup to run weekly
-    cron: name="site backup" minute="0" hour="2" weekday="1" job="{{ work_dir }}/site-backup" user="root"
-    tags:
-      - prod
-
-  - name: Copy over site-upgrade
-    copy: src=site-upgrade dest={{ work_dir }}/ mode=755
-
-  - name: Copy over site-normal
-    copy: src=site-normal dest={{ work_dir }}/ mode=755
-
-  - name: Untar site backup
-    unarchive: src=ejosh_site.bak.tar dest=/
-
-  - name: Move MySQL backup over
-    unarchive: src=wp_backup.sql.tar dest={{ work_dir }}/mysql
+    copy: src=../site_data/logrotate_docker dest=/etc/logrotate.d/docker

@@ -1,5 +1,0 @@
----
-  - name: Clean all unused images
-    command: docker images -q -f "dangling=true" | xargs docker rmi
-    register: command_result
-    failed_when: "'requires a maximum of 1 argument' not in command_result.stderr"
