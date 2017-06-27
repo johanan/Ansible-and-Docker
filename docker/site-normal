@@ -1,2 +1,0 @@
-#!/bin/bash
-sudo docker exec blog_backend_1 /site-normal

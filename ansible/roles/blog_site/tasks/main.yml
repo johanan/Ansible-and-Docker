@@ -22,6 +22,7 @@
       - frontend_nginx.conf
       - ejosh.co.crt
       - ejosh.co.key
+      - site-backup
 
   - name: Check secrets
     shell: docker secret ls
@@ -100,3 +101,17 @@
 
   - name: create the logrotate conf for docker
     copy: src=../site_data/logrotate_docker dest=/etc/logrotate.d/docker
+
+  - name: copy the backup script
+    copy: src=../site_data/site-backup dest={{ work_dir }}/site-backup mode=755
+
+  - name: install s3cmd
+    apt: name=s3cmd state=present update_cache=yes
+
+  - name: install s3cfg
+    template: src=s3cfg dest=/root/.s3cfg
+
+  - name: schedule backup to run weekly
+    cron: name="site backup" minute="0" hour="2" weekday="1" job="{{ work_dir }}/site-backup" user="root"
+    tags:
+      - prod
