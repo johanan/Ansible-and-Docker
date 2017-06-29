@@ -1,7 +1,0 @@
-#!/bin/bash
-WEEK=$((($(date +%e)-1)/7+1))
-docker exec -t mysql.1.$(docker service ps mysql -f 'name=mysql.1' -q) /bin/bash -c '(export MYSQL_PWD="$(cat /run/secrets/mysql_root_password)"; mysqldump -hlocalhost -uroot $MYSQL_DATABASE)' > /tmp/wp_backup.sql && tar -zcvf /tmp/wp_backup$WEEK.sql.tar.gz /tmp/wp_backup.sql
-docker run -it --volumes-from php.1.$(docker service ps php -f 'name=php.1' -q) -v /tmp:/backup debian:stretch-slim tar -zcvf /backup/ejosh_site.bak.tar.gz /var/www/html/ejosh/
-
-s3cmd put /tmp/wp_backup$WEEK.sql.tar.gz s3://ejoshblog-backup/weekly/wp_backup$WEEK.sql.tar.gz && rm /tmp/wp_backup$WEEK.sql.tar.gz
-s3cmd put /tmp/ejosh_site.bak.tar.gz s3://ejoshblog-backup/weekly/ejosh_site$WEEK.bak.tar.gz && rm /tmp/ejosh_site.bak.tar.gz
