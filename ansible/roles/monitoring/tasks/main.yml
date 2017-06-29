@@ -1,0 +1,34 @@
+---
+  - name: Create overlay network
+    docker_network:
+      name: monitoring
+      driver: overlay
+    ignore_errors: yes
+
+  - name: Register services
+    shell: docker service ls
+    changed_when: False
+    register: docker_service
+
+  - name: Start elasticsearch
+    shell: docker service create --name elasticsearch --network=monitoring --mount type=volume,target=/usr/share/elasticsearch/data elasticsearch:2.4.0
+    when: "docker_service.stdout.find('elasticsearch') == -1"
+
+  - name: Start Kibana
+    shell: docker service create --network=monitoring --name kibana -e ELASTICSEARCH_URL="http://elasticsearch:9200" --publish 5601:5601 kibana:4.6.0
+    when: "docker_service.stdout.find('kibana') == -1"
+
+  - name: Start cAdvisor
+    shell: >
+      docker service create --network=monitoring --mode global --name cadvisor
+      --mount type=bind,source=/,target=/rootfs,readonly=true
+      --mount type=bind,source=/var/run,target=/var/run,readonly=false
+      --mount type=bind,source=/sys,target=/sys,readonly=true
+      --mount type=bind,source=/var/lib/docker/,target=/var/lib/docker,readonly=true
+      google/cadvisor:latest
+      -storage_driver=elasticsearch
+      -storage_driver_es_host="http://elasticsearch:9200"
+    when: "docker_service.stdout.find('cadvisor') == -1"
+
+  - name: Setup index pattern
+    shell: "docker exec -t $(docker container ls -f \"name=cadvisor.*\" -l -q) curl -XPUT http://elasticsearch:9200/.kibana/index-pattern/cadvisor -d '{\"title\" : \"cadvisor*\",  \"timeFieldName\": \"container_stats.timestamp\"}'"
