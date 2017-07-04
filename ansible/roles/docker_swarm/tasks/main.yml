@@ -4,12 +4,16 @@
     changed_when: False
     register: docker_info
 
+  - name: get the main swarm manager
+    set_fact: swarm_manager={{ hostvars[groups['manager'][0]][ansible_device]['ipv4']['address'] }}
+
   - name: Start a Swarm
-    shell: docker swarm init --advertise-addr {{ ansible_docker0.ipv4.address }}
-    when: "docker_info.stdout.find('Swarm: active') == -1"
+    shell: docker swarm init --advertise-addr {{ swarm_manager }}
+    when: "docker_info.stdout.find('Swarm: active') == -1 and inventory_hostname == groups['manager'][0]"
 
   - name: Get the worker join-token.
     shell: docker swarm join-token -q worker
+    delegate_to: "{{ groups['manager'][0] }}"
     changed_when: False
     register: docker_worker_token
 
@@ -17,13 +21,12 @@
     docker_network:
       name: ejosh_network
       driver: overlay
+    delegate_to: "{{ groups['manager'][0] }}"
     ignore_errors: yes
     #this errors but creates the network
 
-  #- name: Join the pending Swarm worker nodes.
-  #  shell: docker swarm join --token "{{ docker_worker_token.stdout }}"
-  #    {{ ansible_default_ipv4.address }}:2377
-
-  #- name: Display all variables/facts known for a host
-  #  debug:
-  #    var: hostvars[inventory_hostname]
+  - name: Join the pending Swarm worker nodes.
+    shell: docker swarm join --token "{{ docker_worker_token.stdout }}"
+      {{ swarm_manager }}:2377
+    when: "docker_info.stdout.find('Swarm: active') == -1
+    and 'worker' in group_names"

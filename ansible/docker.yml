@@ -6,5 +6,6 @@
   roles:
     - swap
     - docker
+    - docker_firewall
     - docker_swarm
     - blog_site

@@ -12,7 +12,7 @@
     tags:
       - initial
 
-  - name: Copy need files over
+  - name: Copy needed files over
     copy: src=../../site_data/{{ item }} dest={{ work_dir }}
     with_items:
       - mysql_Dockerfile
@@ -31,23 +31,28 @@
   - name: Check secrets
     shell: docker secret ls
     changed_when: False
+    delegate_to: "{{ groups['manager'][0] }}"
     register: docker_secret
 
   - name: Create mysql root password
     shell: openssl rand -base64 20 | docker secret create mysql_root_password -
     when: "docker_secret.stdout.find('mysql_root_password') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Create mysql user password
     shell: openssl rand -base64 20 | docker secret create mysql_password -
     when: "docker_secret.stdout.find('mysql_password') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Create ejosh cert secret
     shell: docker secret create ejosh.co.crt {{ work_dir }}/ejosh.co.crt
     when: "docker_secret.stdout.find('ejosh.co.crt') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Create ejosh cert key
     shell: docker secret create ejosh.co.key {{ work_dir }}/ejosh.co.key
     when: "docker_secret.stdout.find('ejosh.co.key') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Delete the key
     file:
@@ -76,26 +81,32 @@
     shell: docker service ls
     changed_when: False
     register: docker_service
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Start MySQL
     shell: docker service create --name mysql --replicas 1  --network ejosh_network  --secret source=mysql_root_password,target=mysql_root_password  --secret source=mysql_password,target=mysql_password  -e MYSQL_ROOT_PASSWORD_FILE="/run/secrets/mysql_root_password" -e MYSQL_PASSWORD_FILE="/run/secrets/mysql_password"  -e MYSQL_USER="wordpress" -e MYSQL_DATABASE="wordpress" ejosh.co/mysql
     when: "docker_service.stdout.find('mysql') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Start php
     shell: docker service create --name php --network ejosh_network --secret source=mysql_password,target=mysql_password --mount type=volume,source=ejosh.co_data,destination=/var/www/html ejosh.co/php
     when: "docker_service.stdout.find('php') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Start app
     shell: docker service create --name app --network ejosh_network --mount type=volume,source=ejosh.co_data,destination=/var/www/html --publish 8000:80 ejosh.co/app
     when: "docker_service.stdout.find('app') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Start varnish
     shell: docker service create --name varnish --network ejosh_network --publish 8001:80 ejosh.co/varnish
     when: "docker_service.stdout.find('varnish') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Start frontend
     shell: docker service create --name frontend --network ejosh_network --secret source=ejosh.co.crt,target=ejosh.co.crt --secret source=ejosh.co.key,target=ejosh.co.key --publish 80:80 --publish 443:443 ejosh.co/frontend
     when: "docker_service.stdout.find('frontend') == -1"
+    delegate_to: "{{ groups['manager'][0] }}"
 
   - name: Setup ufw
     ufw: rule=allow port=80 proto=tcp
