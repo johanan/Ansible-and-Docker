@@ -1,0 +1,20 @@
+---
+  - name: Update and upgrade apt packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+  
+  - name: Restart server
+    command: /sbin/shutdown -r
+    async: 0
+    poll: 0
+    ignore_errors: true
+
+  - name: Wait
+    wait_for:
+      port: 22
+      host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+      delay: 150
+    delegate_to: localhost
+    connection: local
+    become: false

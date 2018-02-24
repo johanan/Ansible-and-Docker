@@ -3,6 +3,6 @@
     ufw:
       rule: allow
       proto: any
-      src: "{{ hostvars[item][ansible_device].ipv4.address }}"
+      src: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}"
     with_inventory_hostnames:
       - all

@@ -4,8 +4,9 @@
   vars_files:
     - vars.yml
   roles:
-    - swap
-    - docker
-    - docker_firewall
+    #- swap
+    #- docker
+    #- reboot
+    #- docker_firewall
     - docker_swarm
     - blog_site

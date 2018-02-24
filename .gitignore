@@ -8,6 +8,7 @@ ejosh/
 ejosh.co.crt
 zendfb/
 .vagrant/
+vagrant/*.log
 ejosh_site.bak.tar
 wp_backup.sql.tar
 ejosh_site.bak.tar.gz

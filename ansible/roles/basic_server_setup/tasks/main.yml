@@ -1,4 +1,7 @@
 ---
+  - name: Make sure apt-get is up to date
+    raw: apt-get update
+    
   - name: 'install python2'
     raw: sudo apt-get -y install python-simplejson
 
@@ -43,9 +46,3 @@
 
   - name: Restart SSH
     service: name=ssh state=restarted enabled=yes
-
-  - name: Restart server
-    command: /sbin/shutdown -r
-    async: 0
-    poll: 0
-    ignore_errors: true
