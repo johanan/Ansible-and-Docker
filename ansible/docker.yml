@@ -6,7 +6,7 @@
   roles:
     - swap
     - docker
-    - reboot
+    #- reboot
     - docker_firewall
     - docker_swarm
     - blog_site

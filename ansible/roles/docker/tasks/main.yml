@@ -4,9 +4,6 @@
       url: "https://download.docker.com/linux/ubuntu/gpg"
       state: present
 
-  - name: Get kernel extras
-    action: shell apt-get install -y linux-image-extra-$(uname -r)
-
   - name: Get more packages
     apt: name={{item}} state=present
     with_items:
@@ -30,9 +27,7 @@
       - docker-compose
 
   - name: Get Pip
-    easy_install:
-      name: pip
-      state: latest
+    apt: name=python-pip state=present
 
   - name: Get docker-py
     pip:

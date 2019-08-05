@@ -3,14 +3,14 @@
     file: path={{ work_dir }} state=directory
 
   - name: Untar site backup
-   unarchive: src=../../site_data/ejosh_site.bak.tar.gz dest=/
-   tags:
-     - initial
+    unarchive: src=../../site_data/ejosh_site.bak.tar.gz dest=/
+    tags:
+      - initial
 
   - name: Move MySQL backup over
-   unarchive: src=../../site_data/wp_backup.sql.tar.gz dest={{ work_dir }}
-   tags:
-     - initial
+    unarchive: src=../../site_data/wp_backup.sql.tar.gz dest={{ work_dir }}
+    tags:
+      - initial
 
   - name: Copy needed files over
     copy: src=../../site_data/{{ item }} dest={{ work_dir }}
@@ -27,28 +27,29 @@
       - ejosh.co.crt
       - ejosh.co.key
       - site-backup
+      - elasticsearch_Dockerfile
 
   - name: Check secrets
     shell: docker secret ls
     changed_when: False
     register: docker_secret
-    when: "inventory_hostname == swarm_manager"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager)"
 
   - name: Create mysql root password
     shell: openssl rand -base64 20 | docker secret create mysql_root_password -
-    when: "inventory_hostname == swarm_manager and docker_secret.stdout.find('mysql_root_password') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_secret.stdout.find('mysql_root_password') == -1"
 
   - name: Create mysql user password
     shell: openssl rand -base64 20 | docker secret create mysql_password -
-    when: "inventory_hostname == swarm_manager and docker_secret.stdout.find('mysql_password') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_secret.stdout.find('mysql_password') == -1"
 
   - name: Create ejosh cert secret
     shell: docker secret create ejosh.co.crt {{ work_dir }}/ejosh.co.crt
-    when: "inventory_hostname == swarm_manager and docker_secret.stdout.find('ejosh.co.crt') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_secret.stdout.find('ejosh.co.crt') == -1"
 
   - name: Create ejosh cert key
     shell: docker secret create ejosh.co.key {{ work_dir }}/ejosh.co.key
-    when: "inventory_hostname == swarm_manager and docker_secret.stdout.find('ejosh.co.key') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_secret.stdout.find('ejosh.co.key') == -1"
 
   - name: Delete the key
     file:
@@ -63,41 +64,53 @@
       - app
       - varnish
       - frontend
+      - elasticsearch
 
   - name: Register volume
     shell: docker volume ls
     changed_when: False
     register: docker_volume
 
+  - name: make sure esdata exists
+    file: path=/esdata state=directory mode='g+rwx' group=1000
+
   - name: Create volume
     shell: docker volume create --opt type=none --opt device=/var/www/html --opt o=bind ejosh.co_data
     when: "docker_volume.stdout.find('ejosh.co_data') == -1"
+
+  - name: Create esdata volume
+    shell: docker volume create --opt type=none --opt device=/esdata --opt o=bind ejosh.co_esdata
+    when: "docker_volume.stdout.find('ejosh.co_esdata') == -1"
 
   - name: Register services
     shell: docker service ls
     changed_when: False
     register: docker_service
-    when: "inventory_hostname == swarm_manager"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager)"
+
+  - name: Start ElasticSearch
+    shell: docker service create --name elasticsearch --replicas 1  --network ejosh_network -e "discovery.type=single-node" -e "cluster.name=docker-cluster" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=-Xms256m -Xmx256m" --mount type=volume,source=ejosh.co_esdata,destination=/usr/share/elasticsearch/data --publish 9200:9200 --publish 9300:9300 ejosh.co/elasticsearch
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_service.stdout.find('elasticsearch') == -1"
 
   - name: Start MySQL
     shell: docker service create --name mysql --replicas 1  --network ejosh_network  --secret source=mysql_root_password,target=mysql_root_password  --secret source=mysql_password,target=mysql_password  -e MYSQL_ROOT_PASSWORD_FILE="/run/secrets/mysql_root_password" -e MYSQL_PASSWORD_FILE="/run/secrets/mysql_password"  -e MYSQL_USER="wordpress" -e MYSQL_DATABASE="wordpress" ejosh.co/mysql
-    when: "inventory_hostname == swarm_manager and docker_service.stdout.find('mysql') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_service.stdout.find('mysql') == -1"
 
   - name: Start php
     shell: docker service create --name php --network ejosh_network --secret source=mysql_password,target=mysql_password --mount type=volume,source=ejosh.co_data,destination=/var/www/html ejosh.co/php
-    when: "inventory_hostname == swarm_manager and docker_service.stdout.find('php') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_service.stdout.find('php') == -1"
 
   - name: Start app
     shell: docker service create --name app --network ejosh_network --mount type=volume,source=ejosh.co_data,destination=/var/www/html --publish 8000:80 ejosh.co/app
-    when: "inventory_hostname == swarm_manager and docker_service.stdout.find('app') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_service.stdout.find('app') == -1"
 
   - name: Start varnish
     shell: docker service create --name varnish --network ejosh_network --publish 8001:80 ejosh.co/varnish
-    when: "inventory_hostname == swarm_manager and docker_service.stdout.find('varnish') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_service.stdout.find('varnish') == -1"
 
   - name: Start frontend
     shell: docker service create --name frontend --network ejosh_network --secret source=ejosh.co.crt,target=ejosh.co.crt --secret source=ejosh.co.key,target=ejosh.co.key --publish 80:80 --publish 443:443 ejosh.co/frontend
-    when: "inventory_hostname == swarm_manager and docker_service.stdout.find('frontend') == -1"
+    when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_service.stdout.find('frontend') == -1"
 
   - name: Setup ufw
     ufw: rule=allow port=80 proto=tcp

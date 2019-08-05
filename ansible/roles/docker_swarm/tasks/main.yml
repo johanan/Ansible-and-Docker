@@ -9,18 +9,22 @@
     when: "'manager' in groups"
   
   - name: get the main swarm manager
-    set_fact: swarm_manager={{ inventory_hostname }}
+    set_fact: swarm_manager={{ ansible_default_ipv4.address|default(inventory_hostname) }}
     when: "'manager' not in groups"
+
+  - name: Debug
+    debug: 
+      var: hostvars
 
   - name: Start a Swarm
     shell: docker swarm init --advertise-addr {{ swarm_manager }}
-    when: "docker_info.stdout.find('Swarm: active') == -1 and inventory_hostname == swarm_manager"
+    when: "docker_info.stdout.find('Swarm: active') == -1 and (inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager)"
 
   - name: Get the worker join-token.
     shell: docker swarm join-token -q worker
     changed_when: False
     register: docker_worker_token
-    when: "inventory_hostname == swarm_manager"
+    when: "inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager"
 
   - name: Create overlay network
     docker_network:
@@ -28,7 +32,7 @@
       driver: overlay
     ignore_errors: yes
     #this errors but creates the network
-    when: "inventory_hostname == swarm_manager"
+    when: "inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager"
 
   - name: Join the pending Swarm worker nodes.
     shell: docker swarm join --token "{{ docker_worker_token.stdout }}"
