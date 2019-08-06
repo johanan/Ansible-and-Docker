@@ -5,14 +5,9 @@
       state: present
 
   - name: Get more packages
-    apt: name={{item}} state=present
-    with_items:
-      - linux-image-extra-virtual
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - software-properties-common
-      - python-setuptools
+    apt:
+      name: ['linux-image-extra-virtual', 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python-setuptools']
+      state: present
 
   - name: Add Docker repo
     apt_repository:
@@ -21,10 +16,9 @@
       update_cache: yes
 
   - name: Get Docker
-    apt: name={{item}} state=present
-    with_items:
-      - docker-ce
-      - docker-compose
+    apt:
+      name: ['docker-ce', 'docker-compose']
+      state: present
 
   - name: Get Pip
     apt: name=python-pip state=present

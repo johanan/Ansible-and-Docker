@@ -89,7 +89,7 @@
     when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager)"
 
   - name: Start ElasticSearch
-    shell: docker service create --name elasticsearch --replicas 1  --network ejosh_network -e "discovery.type=single-node" -e "cluster.name=docker-cluster" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=-Xms256m -Xmx256m" --mount type=volume,source=ejosh.co_esdata,destination=/usr/share/elasticsearch/data --publish 9200:9200 --publish 9300:9300 ejosh.co/elasticsearch
+    shell: docker service create --name elasticsearch --replicas 1  --network ejosh_network -e "discovery.type=single-node" -e "cluster.name=docker-cluster" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=-Xms256m -Xmx256m" --mount type=volume,source=ejosh.co_esdata,destination=/usr/share/elasticsearch/data ejosh.co/elasticsearch
     when: "(inventory_hostname == swarm_manager or ansible_default_ipv4.address == swarm_manager) and docker_service.stdout.find('elasticsearch') == -1"
 
   - name: Start MySQL

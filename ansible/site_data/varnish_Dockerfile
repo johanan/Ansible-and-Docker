@@ -1,14 +1,3 @@
-FROM debian:buster-slim
-
-RUN apt-get update && \
-  apt-get install -y apt-transport-https && \
-  apt-get install -y curl && \
-  apt-get install -y varnish
+FROM varnish:6
 
 COPY varnish_default.vcl /etc/varnish/default.vcl
-
-ENV CACHE_SIZE=128m
-
-EXPOSE 80
-
-ENTRYPOINT ["varnishd", "-F",  "-f",  "/etc/varnish/default.vcl", "-s", "malloc,128m", "-a", "0.0.0.0:80"]
