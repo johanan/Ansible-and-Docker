@@ -1,5 +1,5 @@
 newuser: jjohanan
 work_dir: /var/lib/blog
 site_name: ejosh.co
-ssh_key: /Users/jjohanan/.ssh/id_rsa.pub
+ssh_key: /Users/jjohanan/.ssh/id_ed25519.pub
 ansible_device: ansible_eth1

@@ -1,3 +1,4 @@
-FROM php:7.2-fpm
+FROM php:fpm
 
-RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+RUN docker-php-ext-install mysqli bcmath exif imagick\
+    && docker-php-ext-enable mysqli bcmath exif imagick

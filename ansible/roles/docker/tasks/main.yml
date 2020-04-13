@@ -17,13 +17,13 @@
 
   - name: Get Docker
     apt:
-      name: ['docker-ce', 'docker-compose']
+      name: ['docker-ce', 'docker-compose', 'python-docker']
       state: present
 
   - name: Get Pip
     apt: name=python-pip state=present
-
-  - name: Get docker-py
+  
+  - name: Get docker for pip
     pip:
-      name: docker-py
+      name: docker
       state: latest
